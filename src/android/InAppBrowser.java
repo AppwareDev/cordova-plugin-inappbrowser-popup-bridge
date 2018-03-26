@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.text.InputType;
 import android.util.TypedValue;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -114,6 +115,9 @@ public class InAppBrowser extends CordovaPlugin {
     private final static int FILECHOOSER_REQUESTCODE = 1;
     private final static int FILECHOOSER_REQUESTCODE_LOLLIPOP = 2;
 
+    private String url;
+    private  HashMap<String, Boolean> features;
+
     private PopupBridge mPopupBridge;
 
     /**
@@ -127,15 +131,14 @@ public class InAppBrowser extends CordovaPlugin {
     public boolean execute(String action, CordovaArgs args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("open")) {
             this.callbackContext = callbackContext;
-            final String url = args.getString(0);
+            url = args.getString(0);
             String t = args.optString(1);
             if (t == null || t.equals("") || t.equals(NULL)) {
                 t = SELF;
             }
             final String target = t;
-            final HashMap<String, Boolean> features = parseFeature(args.optString(2));
-
             LOG.d(LOG_TAG, "target = " + target);
+            features = parseFeature(args.optString(2));
 
             this.cordova.getActivity().runOnUiThread(new Runnable() {
                 @Override
@@ -260,9 +263,13 @@ public class InAppBrowser extends CordovaPlugin {
             this.cordova.getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    if (dialog != null) {
-                        dialog.show();
+                    if(dialog == null) {
+                        showWebPage(url, features);
                     }
+                    dialog.show();
+                    // if (dialog != null) {
+                    //     dialog.show();
+                    // }
                 }
             });
             PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
